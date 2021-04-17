@@ -1,0 +1,108 @@
+000     @SCRATCH
+001     @SCRATCH
+001     _RETURN_
+002     @SCRATCH
+003     @SCRATCH
+004     ItStatus1
+005     ItStatus2
+006-00E rx_buf
+00F     MAIN.i
+00F-012 atan2.y
+010     SI4432_RX_init_parameter.fb
+010     @delay_ms1.P1
+010     MAIN.@SCRATCH1
+011     @PSTRINGCN_807.P1
+011     SI4432_RX_init_parameter.fc0
+011     MAIN.@SCRATCH2
+012     SI4432_RX_init_parameter.fc1
+012     spi_R.data
+012     @PSTRINGCN_807.@SCRATCH1
+013-016 atan2.x
+013     spi_writex.addr
+013     spi_readx.addr
+013     spi_R.i
+013     @PSTRINGCN_807.@SCRATCH2
+014     spi_readx.i
+014     spi_writex.data
+014     @PUTCHAR_1_.P1
+015     spi_writex.i
+015     spi_readx.data
+017-01A atan2.z
+01B.0   atan2.sign
+01C     atan2.quad
+F55     CCP_5_LOW
+F55     CCP_5
+F56     CCP_5_HIGH
+F58     CCP_4
+F58     CCP_4_LOW
+F59     CCP_4_HIGH
+F5E     CCP_3_LOW
+F5E     CCP_3
+F5F     CCP_3_HIGH
+F67     CCP_2_LOW
+F67     CCP_2
+F68     CCP_2_HIGH
+F78.6   C2OUT
+F79.6   C1OUT
+FBE     CCP_1_LOW
+FBE     CCP_1
+FBF     CCP_1_HIGH
+FE1-FE2 @WRITE_PACKED_MEMORY.P1
+FE1-FE2 @READ_PACKED_MEMORY.P2
+FE9-FEA @WRITE_PROGRAM_MEMORY.P1
+FE9-FEA @WRITE_PACKED_MEMORY.P2
+FE9-FEA @READ_PACKED_MEMORY.P3
+FE9-FEA @READ_PROGRAM_MEMORY.P4
+FF6-FF8 @READ_PROGRAM_MEMORY.P1
+FF6-FF8 @WRITE_PROGRAM_MEMORY.P2
+
+ROM Allocation:
+000004  @const959.call
+000014  spi_readx
+000076  spi_writex
+0000DE  SI4432_RX_init_parameter
+000290  @delay_ms1
+0002B8  rx_data
+000310  spi_R
+000348  @PUTCHAR_1_
+000396  @PSTRINGCN_807
+0003B4  @cinit1
+0003B4  MAIN
+0003CE  @cinit2
+
+Project Directory:
+    C:\Users\emine\Desktop\ActiMooRFM\TRANSRECIEVER\RECIEVERREAL\
+
+Project Files:
+    RECIEVERREAL.c                                          [21-Oca-21 17:38  CRC=CAAA14D9]
+    RECIEVERREAL.h                                          [21-Oca-21 17:25  CRC=76A00048]
+    ..\..\..\..\..\..\Program Files (x86)\PICC\Devices\18LF46K22.h [19-Oca-21 16:16  CRC=96C227FC]
+    ..\..\..\..\..\..\Program Files (x86)\PICC\Drivers\math.h [05-May-20 12:57  CRC=02232397]
+
+Source signature=DC52844B
+Program memory checksum=0000
+Hex file CRC=B476
+
+Units:
+    C:\Users\emine\Desktop\ActiMooRFM\TRANSRECIEVER\RECIEVERREAL\RECIEVERREAL (main)
+
+Compiler Settings:
+    Processor:      PIC18LF46K22
+    Pointer Size:   16
+    ADC Range:      0-65535
+    Opt Level:      9
+    Short,Int,Long: UNSIGNED: 1,8,16
+    Float,Double:   32,32
+    Compile Mode:   CCS5
+
+Output Files:
+    XREF file:   RECIEVERREAL.xsym
+    Errors:      RECIEVERREAL.err
+    Ext Symbols: RECIEVERREAL.esym
+    INHX32:      RECIEVERREAL.hex
+    Symbols:     RECIEVERREAL.sym
+    List:        RECIEVERREAL.lst
+    Debug/COFF:  RECIEVERREAL.cof
+    Project:     RECIEVERREAL.ccspjt
+    Call Tree:   RECIEVERREAL.tre
+    Statistics:  RECIEVERREAL.STA

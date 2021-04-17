@@ -1,0 +1,599 @@
+unsigned char spi_byte(unsigned char data )
+{
+   for(unsigned char j=0;j<8;j++)
+   {
+  
+      if(data&0x80) //if bit of data is 1 
+      output_high(SDO);
+      else //if bit of data is 0
+      output_low(SDO);
+      data<<=1;   
+      output_high(SCLK); 
+      if(input(SDI))
+      data|=0x01;
+      else
+      data&=0xfe;
+      output_low(SCLK);
+   }
+   return data;
+}
+
+
+
+
+
+//////////////////////////////.H FILE//////////////////////////////////////////
+#include <18LF46K22.h>
+#device ADC=16
+#FUSES NOMCLR
+#FUSES NOWDT                    //No Watch Dog Timer
+#FUSES WDT128                   //Watch Dog Timer uses 1:128 Postscale
+#FUSES NOBROWNOUT               //No brownout reset
+#FUSES NOLVP                    //No low voltage prgming, B3(PIC16) or B5(PIC18) used for I/O
+#FUSES NOXINST                  //Extended set extension and Indexed Addressing mode disabled (Legacy mode)
+
+#define SI4432_PWRSTATE_READY 01 // Si4432 ready mode define
+#define SI4432_PWRSTATE_TX 0x09 // Si4432 Tx mode define
+#define SI4432_PWRSTATE_RX 05 // Si4432 Rx mode define
+#define SI4432_PACKET_SENT_INTERRUPT 04 // Si4432 packet sent interrupt define
+#define SI4432_Rx_packet_received_interrupt 0x02 // Si4432 packet received interrupt define
+
+#define TX1_RX0 spi_writex(0x0e|0x80, 0x01) // Antenna switch to tx mode
+#define TX0_RX1 spi_writex(0x0e|0x80, 0x02) // Antenna switch to Rx mode
+#define TX0_RX0 spi_writex(0x0e|0x80, 0x00) // Antenna is not in Tx/Rx mode
+
+#define LEDB5 PIN_B5 //(output)
+#define SDO PIN_D3 //  (OUTPUT) PIC E GÖRE
+#define SDI PIN_C4 //  (INPUT)
+#define SCLK PIN_D2 // (OUTPUT)
+#define nSEL PIN_D1 // (OUTPUT)
+#define nIRQ PIN_D0 // (INPUT)
+#use delay(clock=64MHz,crystal=16MHz)
+#use rs232(baud=9600,parity=N,xmit=PIN_A1,rcv=PIN_A2,bits=8,stream=PORT1)
+
+//////////////////////////MAIN WORKING CODE///////////////////////////////////////////
+#include <RECIEVERREAL.h>
+#include <math.h>
+
+unsigned char ItStatus1,ItStatus2;
+unsigned char rx_buf[1];
+void SI4432_RX_init_parameter(void);
+void rx_data();
+unsigned char spi_writex(unsigned char addr, unsigned char data);
+unsigned char spi_readx(unsigned char addr );
+
+unsigned char spi_R(unsigned char data);
+
+void main()
+{
+   set_tris_d(0b00000001);
+   set_tris_b(0b00000000);
+   set_tris_c(0b00010000);
+   SI4432_RX_init_parameter();
+   TX0_RX0;
+   while(TRUE)
+   {    
+      delay_ms(500);
+      rx_data();
+      while(input(nIRQ));
+            if(!input(nIRQ))
+      { 
+         for(int8 i=0;i<5;i++)
+         {
+            output_high(LEDB5);
+            delay_ms(500);
+            output_low(LEDB5);
+            delay_ms(500);
+         }
+//When any of the Interrupt/Status 1 register bits change state from 0 to 1 the device will notify the microcontroller by
+//setting the nIRQ pin LOW = 0 if the corresponding enable bit is set in the Interrupt Enable 1 register. The nIRQ pin
+//will go to HIGH and all the enabled interrupt bits will be cleared when the microcontroller reads this address
+      ItStatus1 = spi_readx(0x03); // read status, clear interrupt
+      ItStatus2 = spi_readx(0x04);
+      output_low(SCLK);
+      output_low(nSEL); // must be low during the addr write
+      rx_buf[0]=spi_readx(0x7f);
+//!      for(int8 x=0;x<4;x++)
+//!         {
+//!            rx_buf[x]=spi_R(0x00);
+//!         }
+//!      output_high(nSEL); 
+
+      
+         spi_writex(0x07, SI4432_PWRSTATE_READY);
+         // Exit Rx mode after all the data read from the FiFo
+           
+//!         chksum = 0;
+//!         for(int8 k=0;k<3;k++) // calculate the checksum for the received data
+//!         {chksum += rx_buf[k];}
+//!         if(( chksum== rx_buf[3] )&&( rx_buf[0] == 0x41 ))
+       if(rx_buf[0] == 0x41 )
+         {
+          
+               output_high(LEDB5);
+               delay_ms(3000);
+               printf("data is= %c \n ",rx_buf[0]);// data verified OK
+
+
+            }
+        
+         else
+         {
+           printf("Data Verified error, then restart to Rx");
+             for(unsigned char i=0;i<7;i++)
+        {
+           output_high(LEDB5);
+           delay_ms(50);
+           output_low(LEDB5);
+            delay_ms(50);
+         }
+            rx_data(); // Data Verified error, then restart to Rx
+          }
+      
+//!      output_high(nSEL); 
+//!      output_high(SCLK);
+//!      spi_writex(0x0d, 0x41);
+//!
+//!      delay_ms(1000);
+//!      unsigned char y=spi_readx(0x0d);
+//!      delay_ms(2000);
+//!      //CONTROLSTART
+//!      if(0x41==y)
+//!      {
+//!         for(unsigned char i=0;i<7;i++)
+//!         {
+//!            output_high(LEDB5);
+//!            delay_ms(50);
+//!            output_low(LEDB5);
+//!            delay_ms(50);
+//!         }  
+//!
+//!      }
+//!      //CONTROLEND
+//break;
+      }
+   }
+
+}
+ 
+ void SI4432_RX_init_parameter(void)
+{
+   unsigned char fb=0x53,fc0=0x64,fc1=0x00; // //434 mhz
+   ItStatus1 = spi_readx(0x03); // read status, clear interrupt
+   ItStatus2 = spi_readx(0x04);
+   spi_writex(0x06, 0x00); // no wakeup up, lbd,
+   spi_writex(0x07, SI4432_PWRSTATE_READY); // disable lbd, wakeup timer, use internal 32768,xton = 1; in ready mode
+   spi_writex(0x09, 0x7f); // c = 12.5p
+   spi_writex(0x0a, 0x05);
+   spi_writex(0x0b, 0xf4); // gpio0 rx data output
+   spi_writex(0x0c, 0xfd); // gpio vdd
+   spi_writex(0x0d, 0xfd); // gpio vdd
+   spi_writex(0x0e, 0x00); // gpio 0, 1,2 NO OTHER FUNCTION.
+   spi_writex(0x70, 0x20); // disable manchest
+   spi_writex(0x1d, 0x00); // enable afc
+   spi_writex(0x1c, 0x1d); // RATE_24K: // 2.4k
+   spi_writex(0x20,0x41);//0x20 calculate from the datasheet= 500*(1+2*down3_bypass)/(2^ndec*RB*(1+enmanch))
+   spi_writex(0x21, 0x60); // 0x21 , rxosr[10--8] = 0; stalltr = (default), ccoff[19:16] = 0;
+   spi_writex(0x22, 0x27); // 0x22 ncoff =5033 = 0x13a9
+   spi_writex(0x23, 0x52); // 0x23
+   spi_writex(0x24, 0x00); // 0x24
+   spi_writex(0x25, 0x06); // 0x25
+   spi_writex(0x2a, 0x1e);
+   spi_writex(0x30, 0x8c); // enable packet handler, msb first, enable crc,
+// 0x31 only readable
+   spi_writex(0x32, 0xff); // 0x32address enable for headere byte 0, 1,2,3, receive header check for byte 0, 1,2,3
+   spi_writex(0x33, 0x42); // header 3, 2, 1,0 used for head length, fixed packet length,synchronize word length 3, 2,
+   spi_writex(0x34, 64); // 64 nibble = 32byte preamble
+   spi_writex(0x35, 0x20); //0x35 need to detect 20bit preamble
+   spi_writex(0x36, 0x2d); // synchronize word
+   spi_writex(0x37, 0xd4);
+   spi_writex(0x38, 0x00);
+   spi_writex(0x39, 0x00);
+   spi_writex(0x3f, 's'); // check hearder
+   spi_writex(0x40, 'o');
+   spi_writex(0x41, 'n');
+   spi_writex(0x42, 'g');
+   spi_writex(0x43, 0xff); // all the bit to be checked
+   spi_writex(0x44, 0xff); // all the bit to be checked
+   spi_writex(0x45, 0xff); // all the bit to be checked
+   spi_writex(0x46, 0xff); // all the bit to be checked
+// 0x56 ---------0x6c ??????????????????????????
+   spi_writex(0x79, 0x0); // no hopping
+   spi_writex(0x7a, 0x0); // no hopping
+   spi_writex(0x71, 0x22); // Gfsk, fd[8] =0, no invert for Tx/Rx data, fifo mode, txclk -->gpio
+   spi_writex(0x73, 0x0);
+   spi_writex(0x74, 0x0); // no offset
+//band 434:
+   spi_writex(0x75, fb); // hbsel = 0, sbsel =1 ???, fb = 19
+   spi_writex(0x76, fc0); // 25600= 0x6400 for 434Mhz
+   spi_writex(0x77, fc1);
+}
+
+void rx_data()
+{
+   spi_writex(0x07|0x80, SI4432_PWRSTATE_READY); // enter Ready mode
+   delay_ms(5); // stablize the OSC; not needed if OSC is on
+   TX0_RX1; // antenna switch = Rx mode
+   spi_writex(0x08, 0x03); //clear Tx/Rx fifo
+   spi_writex(0x08, 0x00); //clear Tx/Rx fifo  WE MUST SET TO THE DEFAUT VALUES=0
+   spi_writex(0x07,SI4432_PWRSTATE_RX ); // enter Rx mode //AUTOMATICALLY CLEARED WHEN A VALID PACKET RECýEVED
+   spi_writex(0x05, SI4432_Rx_packet_received_interrupt); // interrupt for packet received
+   // when 05 register bits are enabled then nIRQ=0 interrupt will occur if the corresponding enable bit is set in the Interrupt Enable 1 register
+   //after  we read 03 and 04 registers  .when we read 03,04 registers then nIRQ=1
+  
+   ItStatus1 = spi_readx(0x03); // read status, clear interrupt
+   ItStatus2 = spi_readx(0x04);
+//!            for(int8 i=0;i<3;i++)
+//!         {
+//!            output_high(LEDB5);
+//!            delay_ms(500);
+//!            output_low(LEDB5);
+//!            delay_ms(500);
+//!         }
+}
+
+unsigned char spi_writex(unsigned char addr , unsigned char data ) //(transmitter part) writing adress and data from mcu to rf module FIFO
+{
+//make sure to use addr|0x80 in the argument of addr for writing mode
+   addr|=0x80;
+   output_low(SCLK);
+   output_low(nSEL); // must be low during the data read write
+   for(unsigned char k=0;k<8;k++)
+   {
+
+      if(addr&0x80)
+      output_high(SDO);
+      else 
+      output_low(SDO);
+      addr<<=1;
+      output_high(SCLK);
+      delay_cycles(1);
+      output_low(SCLK);
+      
+   } 
+   for(unsigned char j=0;j<8;j++)
+   {
+  
+      if(data&0x80) //if bit of data is 1 
+      output_high(SDO);
+      else //if bit of data is 0
+      output_low(SDO);
+      data<<=1;   
+      output_high(SCLK); 
+      delay_cycles(1);
+      output_low(SCLK);
+   }
+   output_high(nSEL); // must be high after finish Writing addr and data
+   output_high(SCLK);
+   return data;
+                                                                  //CLEAR FIFO!!!!?????
+}
+unsigned char spi_readx(unsigned char addr)
+{
+
+   //CONTROLSTART
+
+   //CONTROLEND
+   output_low(SCLK);
+   output_low(nSEL); // must be low during the addr write
+   for(unsigned char l=0;l<8;l++)
+   {
+      if(addr&0x80)
+      output_high(SDO);
+      else 
+      output_low(SDO);
+      addr<<=1;
+      output_high(SCLK);
+      delay_cycles(1);
+      output_low(SCLK);
+      
+   }
+
+      output_low(SDO);
+      unsigned data;
+   for(unsigned char k=0;k<8;k++)
+   {             
+//!      if(data&0x80)
+//!      output_high(SDO);
+//!      else 
+//!      output_low(SDO);
+      data <<= 1;
+      output_high(SCLK);  
+      if(input(SDI)) // reading the actual data from rf module
+        { data|=0x01;}
+//!      else
+//!         { data&=0xfe;}
+      //data<<=1; //else kullanmazsak bunu alta da yazabiliriz.
+
+      output_low(SCLK);
+
+   }
+      output_high(nSEL); 
+      output_high(SCLK);
+   return data;
+}
+
+unsigned char spi_R(unsigned char data)
+{  
+   //CONTROLSTART
+
+   //CONTROLEND
+ 
+   for(unsigned char l=0;l<8;l++)
+   {
+      if(data&0x80)
+      output_high(SDO);
+      else 
+      output_low(SDO);
+      data<<=1;
+      output_high(SCLK);
+
+
+ 
+      if(input(SDI)) // reading the actual data from rf module
+        { data|=0x01;}
+//!      else
+//!         { data&=0xfe;}
+      //data<<=1; //else kullanmazsak bunu alta da yazabiliriz.
+
+      output_low(SCLK);
+
+   }
+
+   return data;
+}
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+#include <RECIEVERREAL.h>
+#include <math.h>
+unsigned char chksum;
+unsigned char ItStatus1,ItStatus2;
+
+//unsigned char rx_buf[1];
+unsigned char rx_buf[4];
+void SI4432_RX_init_parameter(void);
+void rx_data();
+unsigned char spi_writex(unsigned char addr, unsigned char data);
+unsigned char spi_readx(unsigned char addr);
+unsigned char spi_R(unsigned char data);
+
+void main()
+{
+   set_tris_d(0b00000001);
+   set_tris_b(0b00000000);
+   set_tris_c(0b00010000);
+   SI4432_RX_init_parameter();
+   spi_writex(0x0e|0x80, 0x00); //TX0_RX0 Antenna is not in Tx/Rx mode
+
+   while(TRUE)
+   {    
+      delay_ms(50);
+      rx_data();
+      while(input(nIRQ));
+      if(!input(nIRQ))
+      { 
+         for(int8 i=0;i<2;i++)
+         {
+            output_high(LEDB5);
+            delay_ms(200);
+            output_low(LEDB5);
+            delay_ms(200);
+         }
+      ItStatus1 = spi_readx(0x03); // read status, clear interrupt
+      output_high(nSEL); 
+      output_high(SCLK);
+      ItStatus2 = spi_readx(0x04);
+      output_high(nSEL); 
+      output_high(SCLK);
+      delay_ms(5);
+      output_low(SCLK);
+      output_low(nSEL); // must be low during the addr write
+      rx_buf[0]=spi_readx(0x7f);
+   for(int8 x=0;x<4;x++)
+   {
+      rx_buf[x]=spi_R(0x00);
+   }
+   output_high(nSEL);
+   output_high(SCLK);
+      spi_writex(0x07, SI4432_PWRSTATE_READY);  // Exit Rx mode after all the data read from the FiFo           
+   chksum = 0;
+   for(int8 k=0;k<3;k++) // calculate the checksum for the received data
+   {chksum += rx_buf[k];}
+   if(( chksum== rx_buf[3] )&&( rx_buf[0] == 0x41 ))
+      {
+         for(int8 i=0;i<4;i++)
+         {
+            output_high(LEDB5);
+            delay_ms(50);
+            printf("data is= %c \n ",rx_buf[i]);// data verified OK
+         }
+      }
+//!       if(rx_buf[0] == 0x41 )
+//!         {
+//!            output_high(LEDB5);
+//!            delay_ms(50);
+//!            printf("data is= %c \n ",rx_buf[0]);// data verified OK
+//!         }
+       else
+         {
+            printf("Data Verified error, then restart to Rx");
+            for(unsigned char i=0;i<7;i++)
+            {
+               output_high(LEDB5);
+               delay_ms(50);
+               output_low(LEDB5);
+               delay_ms(50);
+            }
+            rx_data(); // Data Verified error, then restart to Rx
+         }  
+      }
+   }
+}
+ void SI4432_RX_init_parameter(void)
+{
+   unsigned char fb=0x53,fc0=0x64,fc1=0x00; // //434 mhz
+   ItStatus1 = spi_readx(0x03); // read status, clear interrupt
+   output_high(nSEL); 
+   output_high(SCLK);
+   ItStatus2 = spi_readx(0x04);
+   output_high(nSEL); 
+   output_high(SCLK);
+   spi_writex(0x06, 0x00); // no wakeup up, lbd,
+   spi_writex(0x07, SI4432_PWRSTATE_READY); // disable lbd, wakeup timer, use internal 32768,xton = 1; in ready mode
+   spi_writex(0x09, 0x7f); // c = 12.5p
+   spi_writex(0x0a, 0x05);
+   spi_writex(0x0b, 0xf4); // gpio0 rx data output
+   spi_writex(0x0c, 0xfd); // gpio vdd
+   spi_writex(0x0d, 0xfd); // gpio vdd
+   spi_writex(0x0e, 0x00); // gpio 0, 1,2 NO OTHER FUNCTION.
+   spi_writex(0x70, 0x20); // disable manchest
+   spi_writex(0x1d, 0x00); // enable afc
+   spi_writex(0x1c, 0x1d); // RATE_24K: // 2.4k
+   spi_writex(0x20,0x41);//0x20 calculate from the datasheet= 500*(1+2*down3_bypass)/(2^ndec*RB*(1+enmanch))
+   spi_writex(0x21, 0x60); // 0x21 , rxosr[10--8] = 0; stalltr = (default), ccoff[19:16] = 0;
+   spi_writex(0x22, 0x27); // 0x22 ncoff =5033 = 0x13a9
+   spi_writex(0x23, 0x52); // 0x23
+   spi_writex(0x24, 0x00); // 0x24
+   spi_writex(0x25, 0x06); // 0x25
+   spi_writex(0x2a, 0x1e);
+   spi_writex(0x30, 0x8c); // enable packet handler, msb first, enable crc,
+// 0x31 only readable
+   spi_writex(0x32, 0xff); // 0x32address enable for headere byte 0, 1,2,3, receive header check for byte 0, 1,2,3
+   spi_writex(0x33, 0x42); // header 3, 2, 1,0 used for head length, fixed packet length,synchronize word length 3, 2,
+   spi_writex(0x34, 64); // 64 nibble = 32byte preamble
+   spi_writex(0x35, 0x20); //0x35 need to detect 20bit preamble
+   spi_writex(0x36, 0x2d); // synchronize word
+   spi_writex(0x37, 0xd4);
+   spi_writex(0x38, 0x00);
+   spi_writex(0x39, 0x00);
+   spi_writex(0x3f, 's'); // check hearder
+   spi_writex(0x40, 'o');
+   spi_writex(0x41, 'n');
+   spi_writex(0x42, 'g');
+   spi_writex(0x43, 0xff); // all the bit to be checked
+   spi_writex(0x44, 0xff); // all the bit to be checked
+   spi_writex(0x45, 0xff); // all the bit to be checked
+   spi_writex(0x46, 0xff); // all the bit to be checked
+// 0x56 ---------0x6c ??????????????????????????
+   spi_writex(0x79, 0x0); // no hopping
+   spi_writex(0x7a, 0x0); // no hopping
+   spi_writex(0x71, 0x22); // Gfsk, fd[8] =0, no invert for Tx/Rx data, fifo mode, txclk -->gpio
+   spi_writex(0x73, 0x0);
+   spi_writex(0x74, 0x0); // no offset
+//band 434:
+   spi_writex(0x75, fb); // hbsel = 0, sbsel =1 ???, fb = 19
+   spi_writex(0x76, fc0); // 25600= 0x6400 for 434Mhz
+   spi_writex(0x77, fc1);
+}
+
+void rx_data()
+{
+   spi_writex(0x07|0x80, SI4432_PWRSTATE_READY); // enter Ready mode
+   delay_ms(5); // stablize the OSC; not needed if OSC is on
+   spi_writex(0x0e|0x80, 0x02);// TX0_RX  antenna switch = Rx mode
+   spi_writex(0x08, 0x03); //clear Tx/Rx fifo
+   spi_writex(0x08, 0x00); //clear Tx/Rx fifo  WE MUST SET TO THE DEFAUT VALUES=0
+   spi_writex(0x07,SI4432_PWRSTATE_RX ); // enter Rx mode //AUTOMATICALLY CLEARED WHEN A VALID PACKET RECIEVED
+   spi_writex(0x05, SI4432_Rx_packet_received_interrupt); // interrupt for packet received
+   ItStatus1 = spi_readx(0x03); // read status, clear interrupt
+   output_high(nSEL); 
+   output_high(SCLK);
+   ItStatus2 = spi_readx(0x04);
+   output_high(nSEL); 
+   output_high(SCLK);
+   //when we write interrupt in 0x05 register we must read status registers(03h,04h) in order to enable nIRQ=0 pin.
+   //after that we must read status registers for disable the interrupts.
+}
+
+unsigned char spi_writex(unsigned char addr , unsigned char data )
+{
+   addr|=0x80;
+   output_low(SCLK);
+   output_low(nSEL); // must be low during the data read write
+   for(unsigned char k=0;k<8;k++)
+   {
+      if(addr&0x80)
+      output_high(SDO);
+      else 
+      output_low(SDO);
+      addr<<=1;
+      output_high(SCLK);
+      delay_cycles(1);
+      output_low(SCLK);  
+   } 
+   for(unsigned char j=0;j<8;j++)
+   {
+      if(data&0x80) //if bit of data is 1 
+      output_high(SDO);
+      else //if bit of data is 0
+      output_low(SDO);
+      data<<=1;   
+      output_high(SCLK); 
+      delay_cycles(1);
+      output_low(SCLK);
+   }
+   output_high(nSEL); // must be high after finish Writing addr and data
+   output_high(SCLK);
+   return data;
+}
+unsigned char spi_readx(unsigned char addr)
+{
+   output_low(SCLK);
+   output_low(nSEL); // must be low during the addr write
+   for(unsigned char l=0;l<8;l++)
+   {
+      if(addr&0x80)
+      output_high(SDO);
+      else 
+      output_low(SDO);
+      addr<<=1;
+      output_high(SCLK);
+      delay_cycles(1);
+      output_low(SCLK);   
+   }
+      output_low(SDO);
+      unsigned data;
+   for(unsigned char k=0;k<8;k++)
+   {             
+      data <<= 1;
+      output_high(SCLK);  
+      if(input(SDI)) // reading the actual data from rf module
+        { data|=0x01;}
+//!   else
+//!     { data&=0xfe;}
+      //data<<=1; //else kullanmazsak bunu alta da yazabiliriz.
+
+      output_low(SCLK);
+
+   }
+
+      return data;
+}
+
+unsigned char spi_R(unsigned char data)
+{  
+   for(unsigned char l=0;l<8;l++)
+   {
+      if(data&0x80)
+      output_high(SDO);
+      else 
+      output_low(SDO);
+      data<<=1;
+      output_high(SCLK);
+
+
+ 
+      if(input(SDI)) // reading the actual data from rf module
+      {data|=0x01;}
+      output_low(SCLK);
+   }
+   return data;
+}
+

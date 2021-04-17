@@ -1,0 +1,81 @@
+000     @SCRATCH
+001     @SCRATCH
+001     _RETURN_
+002     @SCRATCH
+003     @SCRATCH
+004     rx_buf
+005     spi_writeaddr.addr
+005     spi_rwdummy.data
+005-008 atan2.y
+006     spi_rwdummy.i
+006     spi_writeaddr.i
+009-00C atan2.x
+00D-010 atan2.z
+011.0   atan2.sign
+012     atan2.quad
+F55     CCP_5
+F55     CCP_5_LOW
+F56     CCP_5_HIGH
+F58     CCP_4_LOW
+F58     CCP_4
+F59     CCP_4_HIGH
+F5E     CCP_3_LOW
+F5E     CCP_3
+F5F     CCP_3_HIGH
+F67     CCP_2_LOW
+F67     CCP_2
+F68     CCP_2_HIGH
+F78.6   C2OUT
+F79.6   C1OUT
+FBE     CCP_1
+FBE     CCP_1_LOW
+FBF     CCP_1_HIGH
+FE1-FE2 @WRITE_PACKED_MEMORY.P1
+FE1-FE2 @READ_PACKED_MEMORY.P2
+FE9-FEA @READ_PROGRAM_MEMORY.P1
+FE9-FEA @WRITE_PACKED_MEMORY.P2
+FE9-FEA @WRITE_PROGRAM_MEMORY.P3
+FE9-FEA @READ_PACKED_MEMORY.P4
+FF6-FF8 @WRITE_PROGRAM_MEMORY.P1
+FF6-FF8 @READ_PROGRAM_MEMORY.P2
+
+ROM Allocation:
+000004  spi_writeaddr
+000036  spi_rwdummy
+00006C  MAIN
+00006C  @cinit1
+00008E  @cinit2
+
+Project Directory:
+    C:\Users\emine\OneDrive\Masaüstü\TRANSRECIEVER\
+
+Project Files:
+    TRANSMITTER.c                                           [17-Oca-21 14:24  CRC=9E9A05BD]
+    TRANSMITTER.h                                           [17-Oca-21 13:06  CRC=0709AF8E]
+    ..\..\..\..\..\Program Files (x86)\PICC\Devices\18LF46K22.h [12-Kas-13 14:35  CRC=A6833654]
+    ..\..\..\..\..\Program Files (x86)\PICC\Drivers\math.h  [28-Eyl-12 11:35  CRC=546412C9]
+
+Source signature=F4EF1131
+
+Units:
+    TRANSMITTER (main)
+
+Compiler Settings:
+    Processor:      PIC18LF46K22
+    Pointer Size:   16
+    ADC Range:      0-65535
+    Opt Level:      9
+    Short,Int,Long: UNSIGNED: 1,8,16
+    Float,Double:   32,32
+
+Output Files:
+    XREF file:   TRANSMITTER.xsym
+    Errors:      TRANSMITTER.err
+    Ext Symbols: TRANSMITTER.esym
+    INHX32:      TRANSMITTER.hex
+    Symbols:     TRANSMITTER.sym
+    List:        TRANSMITTER.lst
+    Debug/COFF:  TRANSMITTER.cof
+    Project:     TRANSMITTER.ccspjt
+    Call Tree:   TRANSMITTER.tre
+    Statistics:  TRANSMITTER.STA

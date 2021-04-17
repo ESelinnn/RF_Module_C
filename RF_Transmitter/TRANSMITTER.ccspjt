@@ -1,0 +1,37 @@
+[PROJECT]
+Target=TRANSMITTER.hex
+Processor_Text=PIC18LF46K22
+CCSVerions=5.015
+Compiler=PCH
+CCSVersion=5.015
+[Target Data]
+FileList=TRANSMITTER.c
+[Directories]
+Include=C:\Program Files (x86)\PICC\Devices\;C:\Program Files (x86)\PICC\Drivers\
+[C:\Users\emine\OneDrive\Masaüstü\TRANSRECIEVER\TRANSMITTER]
+Type=4
+[mru-list]
+1=TRANSMITTER.c
+[Opened Files]
+1=TRANSMITTER.c
+2=
+3=TRANSMITTER.h
+4=..\Yeni klasör\rfmmodule\rfmmodule\rfmmodule.c
+5=
+[TRANSMITTER.c]
+Type=4
+[Units]
+Count=1
+1=TRANSMITTER (main)
+
+[fileformats]
+forcecoff=0
+
+[ProjectLog]
+Days=1
+D1=18-04-2021
+D1_L=4
+D1_L1=[4190]Project Opened.
+D1_L2=[4205]Project Closed.
+D1_L3=[4467]Project Opened.
+D1_L4=[4500]Project Closed.

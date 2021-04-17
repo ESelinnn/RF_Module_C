@@ -1,0 +1,48 @@
+
+ROM used:   176/65536 (0%)
+            176/65536 (0%) including unused fragments
+
+            0.1 Average locations per line
+            0.6 Average locations per statement
+
+RAM used:   5/3896 (0%) at main() level
+            25/3896 (1%) worst case
+
+Stack used: 1 worst case (1 in main + 0 for interrupts)
+Stack size: 31
+
+Lines Stmts  %   Files
+----- ----- ---  -----
+  105    53  17  TRANSMITTER.c
+   12     0   0  TRANSMITTER.h
+ 1017     0   0  ..\..\..\..\..\Program Files (x86)\PICC\Devices\18LF46K22.h
+ 2229   257  83  ..\..\..\..\..\Program Files (x86)\PICC\Drivers\math.h
+----- -----
+ 3363   310 Total
+
+Page ROM  %  RAM   Vol Diff  Functions:
+---- --- --- ---   --- ----  ----------
+0     54  15    2   381  7.0  spi_rwdummy
+0     50  14    2   301  6.0  spi_writeaddr
+0     68  19    0   132  2.6  MAIN
+ Inline         0             @cinit1
+
+Program metrics:
+    Functions               3
+    Statements              310
+    Comments                451
+    Volume (V)              1052
+    Difficulty (D)          15.4
+    Effort to implement (E) 16154
+    Time to implement (T)   15 minutes
+    Est Delivered Bugs (B)  0
+    Cyclomatic Complexity   5
+    Maintainability (MI)    72
+
+ Segment     Used  Free
+-----------  ----  ----
+00000-00002     4  0  
+00004-0FFFE   172  65360  
+
+
+

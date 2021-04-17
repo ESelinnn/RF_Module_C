@@ -1,0 +1,51 @@
+[PROJECT]
+Target=RECIEVERREAL.hex
+Processor_Text=PIC18LF46K22
+CCSVerions=5.015
+Compiler=PCH
+CCSVersion=5.100
+[Target Data]
+FileList=RECIEVERREAL.c
+[Directories]
+Include=C:\Program Files (x86)\PICC\Devices\;C:\Program Files (x86)\PICC\Drivers\
+[C:\Users\hp\Desktop\TRANSRECIEVER\RECIEVERREAL\RECIEVERREAL]
+Type=4
+[mru-list]
+1=RECIEVERREAL.c
+[Opened Files]
+1=RECIEVERREAL.c
+2=RECIEVERREAL.h
+3=RECIEVERREAL Notes.txt
+4=FUNCTIONS.c
+5=
+6=FUNCTIONS.c
+7=
+t1=1
+t2=1
+t3=1
+t4=1
+Count=4
+[RECIEVERREAL.c]
+Type=4
+[Documentation]
+1=C:\Users\hp\Desktop\TRANSRECIEVER\RECIEVERREAL\RECIEVERREAL Notes.txt
+1T=RECIEVERREAL Notes.txt
+1E=
+1W=0
+Count=1
+
+[fileformats]
+forcecoff=0
+
+[ProjectLog]
+Days=1
+D1=18-04-2021
+D1_L=2
+D1_L1=[4229]Project Opened.
+D1_L2=[4397]Project Closed.
+[Units]
+Count=1
+1=RECIEVERREAL (main)
+
+[defines]
+buildcount=1
